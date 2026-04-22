@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>49TI 游戏人格测试</title>
+  <style>
+    :root {
+      --bg: #0d0d1a;
+      --panel: #161625;
+      --panel2: #1e1e35;
+      --text: #e8e8f0;
+      --muted: #8888aa;
+      --line: #2a2a45;
+      --soft: #1a1a2e;
+      --accent: #7c6aff;
+      --accent2: #ff6bce;
+      --accent3: #6affcc;
+      --accent-strong: #a89cff;
+      --shadow: 0 16px 40px rgba(124,106,255,0.08);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(124,106,255,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(255,107,206,0.08) 0%, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .shell { max-width: 900px; margin: 0 auto; padding: 24px 16px 56px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .hero { padding: 40px 28px; margin-top: 20px; overflow: hidden; position: relative; text-align: center; }
+    .hero::before { content: ""; position: absolute; left: -80px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(124,106,255,0.15), transparent 70%); pointer-events: none; }
+    .hero::after { content: ""; position: absolute; right: -60px; bottom: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,107,206,0.1), transparent 70%); pointer-events: none; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--accent-strong); border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 8px 16px; margin-bottom: 20px; }
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 { font-size: clamp(32px, 7vw, 60px); line-height: 1.05; letter-spacing: -0.03em; background: linear-gradient(135deg, #fff 30%, var(--accent-strong) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero .sub { margin-top: 16px; color: var(--muted); font-size: 15px; line-height: 1.8; max-width: 560px; margin-left: auto; margin-right: auto; }
+    .type-preview { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+    .type-chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 16px; font-size: 13px; color: var(--muted); }
+    .type-chip span { color: var(--accent-strong); font-weight: 700; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; justify-content: center; }
+    button { border: 0; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; font: inherit; }
+    button:hover { transform: translateY(-2px); }
+    button:disabled { cursor: not-allowed; opacity: 0.4; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; padding: 14px 32px; border-radius: 14px; box-shadow: 0 12px 30px rgba(124,106,255,0.25); font-weight: 700; font-size: 16px; }
+    .btn-secondary { background: var(--panel2); color: var(--text); padding: 14px 20px; border-radius: 14px; border: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .test-wrap, .result-wrap { margin-top: 22px; padding: 22px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .progress { flex: 1; min-width: 180px; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+    .progress > span { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: inherit; transition: width .3s ease; }
+    .progress-text { color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .question-list { display: grid; gap: 16px; }
+    .question { border: 1px solid var(--line); border-radius: 18px; padding: 20px; background: var(--panel2); }
+    .question-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 10px; background: rgba(124,106,255,0.12); border: 1px solid rgba(124,106,255,0.25); color: var(--accent-strong); font-size: 11px; }
+    .question-title { font-size: 16px; line-height: 1.7; color: var(--text); }
+    .options { display: grid; gap: 10px; margin-top: 16px; }
+    .option { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; transition: border-color .16s, background .16s; }
+    .option:hover { border-color: var(--accent); background: rgba(124,106,255,0.05); }
+    .option.selected { border-color: var(--accent); background: rgba(124,106,255,0.1); }
+    .option-code { font-weight: 800; color: var(--accent); min-width: 24px; font-size: 14px; margin-top: 1px; }
+    .option-label { font-size: 14px; line-height: 1.6; color: var(--text); }
+    .actions-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; padding-top: 12px; }
+    .hint { color: var(--muted); font-size: 13px; }
+    .result-top { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 16px; align-items: stretch; }
+    .poster-box, .type-box, .dim-box, .note-box { border: 1px solid var(--line); border-radius: 18px; padding: 20px; background: var(--panel2); }
+    .poster-box { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 280px; position: relative; overflow: hidden; }
+    .poster-box::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(124,106,255,0.08), transparent 70%); }
+    .poster-image { width: 100%; max-height: 320px; object-fit: contain; border-radius: 14px; position: relative; z-index: 1; }
+    .poster-caption { margin-top: 12px; color: var(--muted); font-size: 13px; position: relative; z-index: 1; }
+    .type-kicker { font-size: 11px; color: var(--accent); margin-bottom: 8px; letter-spacing: .1em; text-transform: uppercase; }
+    .type-name { font-size: clamp(28px, 5vw, 48px); line-height: 1.1; letter-spacing: -0.02em; background: linear-gradient(135deg, var(--accent-strong), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .type-subname { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .match { margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 8px 14px; background: rgba(124,106,255,0.1); border: 1px solid rgba(124,106,255,0.3); color: var(--accent-strong); font-weight: 700; font-size: 13px; }
+    .result-layout { display: grid; gap: 16px; }
+    .analysis-box { border: 1px solid var(--line); border-radius: 18px; padding: 20px; background: var(--panel2); }
+    .analysis-box h3, .dim-box h3, .note-box h3 { font-size: 15px; margin-bottom: 12px; color: var(--text); }
+    .analysis-box p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.9; white-space: pre-wrap; }
+    .dim-grid { display: grid; gap: 8px; }
+    .dim-item { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--panel); display: flex; justify-content: space-between; align-items: center; }
+    .dim-item .label { font-size: 14px; color: var(--muted); }
+    .dim-item .value { font-size: 18px; font-weight: 800; color: var(--accent-strong); }
+    .note-box p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .result-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    @media (max-width: 860px) { .result-top { grid-template-columns: 1fr; } .type-preview { gap: 8px; } }
+    @media (max-width: 600px) { .shell { padding: 12px 12px 42px; } .hero, .test-wrap, .result-wrap { padding: 16px; } .hero h1 { font-size: 36px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section id="intro" class="screen active">
+      <div class="hero card">
+        <div class="eyebrow">49TI 出品</div>
+        <h1>你的游戏人格是什么？</h1>
+        <p class="sub">手游、云游戏全覆盖。8道题，测出你的游戏灵魂。看看你是躺平党、氪金怪，还是肝帝本帝。</p>
+        <div class="type-preview">
+          <div class="type-chip"><span>躺平大师</span> 能躺着绝不坐着</div>
+          <div class="type-chip"><span>氪金祖师</span> 钱能解决一切</div>
+          <div class="type-chip"><span>社交花蝴蝶</span> 游戏只是社交工具</div>
+          <div class="type-chip"><span>全能战神</span> 成年人不做选择</div>
+          <div class="type-chip"><span>佛系玩家</span> 开心就好</div>
+          <div class="type-chip"><span>收集癖</span> 全图鉴是信仰</div>
+        </div>
+        <div class="hero-actions">
+          <button id="startBtn" class="btn-primary">开始测试</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="test" class="screen">
+      <div class="test-wrap card">
+        <div class="topbar">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-text" id="progressText">0 / 8</div>
+        </div>
+        <div id="questionList" class="question-list"></div>
+        <div class="actions-bottom">
+          <div class="hint" id="testHint">选择一项才能继续哦。</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="backIntroBtn" class="btn-secondary">返回首页</button>
+            <button id="submitBtn" class="btn-primary" disabled>提交测试</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="result-wrap card">
+        <div class="result-layout">
+          <div class="result-top">
+            <div class="poster-box" id="posterBox">
+              <img id="posterImage" class="poster-image" alt="" />
+              <div id="posterCaption" class="poster-caption"></div>
+            </div>
+            <div class="type-box">
+              <div class="type-kicker">你的游戏人格</div>
+              <div class="type-name" id="resultTypeName">-</div>
+              <div class="match" id="matchBadge">匹配度 0%</div>
+              <div class="type-subname" id="resultTypeSub"></div>
+            </div>
+          </div>
+          <div class="analysis-box">
+            <h3>深度解读</h3>
+            <p id="resultDesc"></p>
+          </div>
+          <div class="dim-box">
+            <h3>四项维度</h3>
+            <div id="dimList" class="dim-grid"></div>
+          </div>
+          <div class="note-box">
+            <h3>温馨提示</h3>
+            <p>本测试纯属娱乐，请勿将结果作为游戏队友选择、相亲择偶、游戏充值决策或人生重大选择的依据。</p>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button id="restartBtn" class="btn-secondary">重新测试</button>
+          <button id="toTopBtn" class="btn-primary">回到首页</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var DIM_META = {
+      M: { name: '游戏动机' },
+      S: { name: '社交风格' },
+      C: { name: '竞技心态' },
+      I: { name: '投入方式' }
+    };
+
+    var questions = [
+      { id: 'q1', dim: 'M', text: '打开游戏，你最先想到的是？', options: [
+        { label: '今日任务还没清，先把体力用完', value: 1 },
+        { label: '看看有没有好友上线，组队开黑', value: 2 },
+        { label: '新版本有什么剧情？赶紧体验', value: 3 }
+      ]},
+      { id: 'q2', dim: 'S', text: '游戏里有人邀请你加入工会，你的第一反应是？', options: [
+        { label: '加了也是僵尸成员，算了不加了', value: 1 },
+        { label: '好啊！人多热闹，一起参加活动', value: 2 },
+        { label: '看工会水平怎么样，能不能带我上分', value: 3 }
+      ]},
+      { id: 'q3', dim: 'C', text: '看到排行榜上有人比你高，你的感受是？', options: [
+        { label: '随便看看，反正排名都是浮云', value: 1 },
+        { label: '有点不服气，研究一下怎么提升', value: 2 },
+        { label: '这有什么难的？充一波反杀他', value: 3 }
+      ]},
+      { id: 'q4', dim: 'I', text: '你通常在游戏里花多少钱？', options: [
+        { label: '0元，白嫖到底，原则问题', value: 1 },
+        { label: '月卡、战令，偶尔小礼包', value: 2 },
+        { label: '看中的必须拿下，量力而行', value: 3 }
+      ]},
+      { id: 'q5', dim: 'M', text: '以下哪句最像你打游戏时会说的话？', options: [
+        { label: '今天有点累，明天再说吧', value: 1 },
+        { label: '你们先玩，我马上到！', value: 2 },
+        { label: '这剧情也太催泪了吧，缓一缓', value: 3 }
+      ]},
+      { id: 'q6', dim: 'S', text: '打游戏时匹配到挂机队友，你怎么做？', options: [
+        { label: '默默打完，心里已经问候过了', value: 1 },
+        { label: '开麦指挥：兄弟你这样不行', value: 2 },
+        { label: '举报加拉黑，然后毫无波澜', value: 3 }
+      ]},
+      { id: 'q7', dim: 'C', text: '连败之后你会怎么做？', options: [
+        { label: '今天运气不好，休息一下', value: 1 },
+        { label: '研究攻略，下次一定赢回来', value: 2 },
+        { label: '系统针对我！换号！', value: 3 }
+      ]},
+      { id: 'q8', dim: 'I', text: '朋友问你怎么还在玩这个游戏，你答？', options: [
+        { label: '没什么就是想清一下日常', value: 1 },
+        { label: '氪都氪了，不玩岂不是亏了', value: 2 },
+        { label: '好不容易练到这个段位，不能掉！', value: 3 }
+      ]}
+    ];
+
+    var TYPE_LIBRARY = {
+      "LAZY": { code: "LAZY", cn: "躺平大师", intro: "能躺着绝不坐着，能挂机绝不手动。", desc: "你是手游界的道家学派掌门人。别人在刷副本，你在挂机；别人在冲榜，你在睡觉。你的游戏哲学是：无为而治，躺赢是最高境界。你不是不会打，你只是觉得没必要那么累。体力溢出？随它去。你的信条是：游戏是拿来放松的，不是拿来受苦的。", dims: { M: 1, S: 1, C: 1, I: 1 }},
+      "CARRY": { code: "CARRY", cn: "大腿本腿", intro: "躺好，让我来带飞。", desc: "你是队友眼中的神队友，也是对手眼中的噩梦。你对游戏有深刻理解，操作细腻，意识一流，经常一打多带队翻盘。你享受被需要的感觉，而你的朋友经常在连败后第一个想起你。你心态稳健，很少抱怨，反而会耐心安慰队友。", dims: { M: 2, S: 3, C: 3, I: 2 }},
+      "COTTLE": { code: "COTTLE", cn: "氪金祖师", intro: "钱能解决的问题，都不是问题。", desc: "648对你来说不是钱包的呐喊，而是通往快乐的最短路。你信奉等价交换法则：时间和精力比金钱更贵。首充、双倍、限定池，你的钱包永远为信仰充值。你不在乎别人说你氪金，因为在你眼里，'氪'是动词，也是荣誉。", dims: { M: 3, S: 2, C: 2, I: 3 }},
+      "SOCIAL": { code: "SOCIAL", cn: "社交花蝴蝶", intro: "游戏不重要，重要的是和谁一起玩。", desc: "对你来说，游戏是一个大型社交广场。段位可以低，但工会一定要活跃；技术可以菜，但语音一定要开。你在游戏里认识的朋友比现实中还多。你是那种会在凌晨三点拉朋友起来打游戏的人，也是在游戏里最愿意倾听别人心事的那种存在。", dims: { M: 2, S: 3, C: 1, I: 2 }},
+      "NOSTALGIA": { code: "NOSTALGIA", cn: "剧情党", intro: "我玩游戏，看的是人生。", desc: "你是游戏里的文艺青年。对你来说，最好的游戏不是数值碾压，而是能在某个深夜让你沉默的那种。你会为了一个支线任务认真看文本，会记住每一个NPC的名字。你的眼泪经常献给CG而不是奖励。", dims: { M: 3, S: 1, C: 1, I: 2 }},
+      "COLLECTOR": { code: "COLLECTOR", cn: "收集癖晚期", intro: "全图鉴是信仰，不接受任何妥协。", desc: "你是手游界的集邮爱好者。每一个新角色都要抽到手，每一个隐藏成就都要解，你像一只松鼠一样囤积着游戏里的一切。你的耐心和毅力用在收集上简直是暴殄天物——用在别的地方早成功了。", dims: { M: 3, S: 2, C: 1, I: 2 }},
+      "CLOUD": { code: "CLOUD", cn: "云玩家", intro: "云不cloud，我只是看得开。", desc: "你是云游戏时代的代表性生物。你精通所有游戏的剧情和攻略，但你的手上可能连一个游戏都没安装。你喜欢看游戏直播、视频解说，你的快乐来自围观而不是亲自下场。你是弹幕里的懂王，也是群里推荐游戏时的意见领袖。", dims: { M: 1, S: 2, C: 1, I: 1 }},
+      "GOD": { code: "GOD", cn: "全能战神", intro: "我全都要，而且是最好的那种。", desc: "你不接受任何短板。技术上你能carry，社交上你能带队，充值上你从不手软，时间投入上你肝到天明。你是游戏公司最欢迎的那种用户，也是朋友眼中「怎么什么都有你」的存在。你的人生信条是：成年人不做选择，如果非要做，那就all in。", dims: { M: 3, S: 3, C: 3, I: 3 }},
+      "SHY": { code: "SHY", cn: "社恐独行侠", intro: "我的世界很安静，请不要语音。", desc: "你是游戏里的独行侠，不需要队友，不需要公会，甚至不需要聊天。对你来说，游戏是一个可以彻底关闭社交功能的避风港。你一个人刷副本，一个人打深渊，一个人看结局。安静，是你游戏世界里最美的BGM。", dims: { M: 2, S: 1, C: 2, I: 1 }},
+      "FOMO": { code: "FOMO", cn: "版本焦虑者", intro: "每次更新，我都感觉在还债。", desc: "你是版本更迭的忠实受害者。每个版本都有新内容，每个内容都要肝，每次大更都是一次新的债务周期。你永远在追赶进度，永远在拉齐落差。这是一种甜蜜的痛苦，而你甘之如饴。", dims: { M: 2, S: 2, C: 2, I: 3 }},
+      "SAGE": { code: "SAGE", cn: "佛系玩家", intro: "输赢都是浮云，开心就好。", desc: "你是游戏里的禅修者，早已在得失之间达到了一种哲学平衡。输赢不重要，参与最重要。你很少在游戏里生气，也很少被坑队友激怒。你是游戏世界里最peace的存在，也是朋友中最受欢迎的游戏伙伴。", dims: { M: 1, S: 2, C: 1, I: 1 }},
+      "ALCOHOLIC": { code: "ALCOHOLIC", cn: "深夜游戏党", intro: "夜深了，这才是游戏开始的时候。", desc: "你是昼夜颠倒的游戏暗夜骑士。白天你是普通人，一到深夜十一点，你的游戏人格就悄然上线。你享受深夜匹配的宁静，享受凌晨三点还在线的少数人的默契。夜晚才是游戏的正确时区。", dims: { M: 1, S: 1, C: 2, I: 2 }},
+      "SHARECARD": { code: "SHARECARD", cn: "蹭分吉诺", intro: "抱大腿这件事，我是专业的。", desc: "你是游戏里的智慧型选手，擅长用最小的投入获得最大的回报。你的技术可能一般，但你非常懂得借力——借朋友的力，借版本的力，借队友的力。你是那种能躺着绝不站着，能抱大腿绝不自己爬的代表人物。", dims: { M: 1, S: 3, C: 1, I: 1 }},
+      "RECHARGE": { code: "RECHARGE", cn: "又肝又氪", intro: "时间和钱，我都花了，你能拿我怎样？", desc: "你是游戏公司财务最喜欢的用户类型——又肝又氪，双管齐下。你的月卡从不缺席，你的礼包从不放过，你的体力永远溢出。你对游戏的投入是全方位的，是的，甚至是现实钱包的噩梦。但你不后悔。", dims: { M: 2, S: 2, C: 2, I: 3 }},
+      "RIVAL": { code: "RIVAL", cn: "万年对手", intro: "有我在，这个第一就别想了。", desc: "你是那种在游戏里有一个假想敌的人。你可能不知道对方是谁，但每次看到他的ID出现在你上方，你就会莫名兴奋。你的执念是你进步的最大动力，也是你在深夜继续排位的精神氮泵。", dims: { M: 2, S: 1, C: 3, I: 2 }},
+      "GUILD_LEADER": { code: "GUILD_LEADER", cn: "工会领袖", intro: "跟着我，带你走向巅峰。", desc: "你是游戏里的意见领袖，天生具有带队气质。你擅长发现每个人的长处，擅长调动团队氛围，擅长在逆境中鼓舞士气。你是朋友在游戏里的定心丸，也是公会频道里最活跃的那一个。", dims: { M: 2, S: 3, C: 2, I: 2 }},
+      "LOYAL": { code: "LOYAL", cn: "老玩家", intro: "这游戏，我玩了三年了。", desc: "你是那种一个游戏能玩几年的钉子户玩家。别人早已退游，你还在这里；其他服务器已经鬼了，你还在默默做日常。你对游戏有感情，对角色有羁绊。你是每个游戏最珍惜的那批用户，也是开发者最想写感谢信的对象。", dims: { M: 2, S: 2, C: 1, I: 2 }},
+      "MAINTENANCE": { code: "MAINTENANCE", cn: "维护补偿战士", intro: "每次维护，都是在给我的钱包回血。", desc: "你是游戏里的理性消费者。你对游戏的关注点与众不同——别人看版本更新内容，你看补偿内容多少。每次维护、每次事故，在你眼里都是隐性福利。你的月卡购买时机精准，你的648消费克制而理智。", dims: { M: 1, S: 1, C: 1, I: 2 }},
+      "STREAMER": { code: "STREAMER", cn: "野生主播", intro: "我打游戏，一半是给自己玩，一半是给别人看。", desc: "你是游戏里的表演型人格。你打游戏的时候会忍不住想象有人在看，会对着空气做出反应，会在精彩操作后回放录像。你适合在朋友开黑时负责气氛，也适合在游戏群里发精彩集锦。", dims: { M: 2, S: 3, C: 2, I: 2 }},
+      "WILDLIFE": { code: "WILDLIFE", cn: "野生玩家", intro: "我不知道什么是攻略，但我就是能过。", desc: "你是游戏里的野路子选手，从不按常理出牌。你可能不知道BOSS的正确打法，但你就是死了几次然后莫名其妙过了。你充值的时候从来不看月卡划算不划算，因为你看不懂。你的游戏风格是混沌而快乐的。", dims: { M: 1, S: 1, C: 2, I: 1 }}
+    };
+
+    var state = { screen: 'intro', answers: {} };
+
+    function showScreen(name) {
+      var screens = document.querySelectorAll('.screen');
+      for (var i = 0; i < screens.length; i++) {
+        screens[i].classList.toggle('active', screens[i].id === name);
+      }
+      state.screen = name;
+    }
+
+    function updateProgress() {
+      var total = questions.length;
+      var answered = 0;
+      for (var k in state.answers) { if (state.answers[k]) answered++; }
+      var pct = total > 0 ? (answered / total) * 100 : 0;
+      var bar = document.getElementById('progressBar');
+      if (bar) bar.style.width = pct + '%';
+      var text = document.getElementById('progressText');
+      if (text) text.textContent = answered + ' / ' + total;
+      var submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) submitBtn.disabled = answered < total;
+    }
+
+    function renderQuestions() {
+      var list = document.getElementById('questionList');
+      if (!list) return;
+      list.innerHTML = '';
+      for (var i = 0; i < questions.length; i++) {
+        var q = questions[i];
+        var div = document.createElement('div');
+        div.className = 'question';
+        var opts = '';
+        for (var oi = 0; oi < q.options.length; oi++) {
+          var opt = q.options[oi];
+          var sel = state.answers[q.id] === opt.value ? ' selected' : '';
+          var code = String.fromCharCode(65 + oi);
+          opts += '<div class="option' + sel + '" data-qid="' + q.id + '" data-val="' + opt.value + '">' +
+            '<span class="option-code">' + code + '</span>' +
+            '<span class="option-label">' + opt.label + '</span></div>';
+        }
+        div.innerHTML = '<div class="question-meta">' +
+          '<span class="badge">' + (DIM_META[q.dim] ? DIM_META[q.dim].name : q.dim) + '</span>' +
+          '<span>' + (i + 1) + ' / ' + questions.length + '</span></div>' +
+          '<div class="question-title">' + q.text + '</div>' +
+          '<div class="options">' + opts + '</div>';
+        list.appendChild(div);
+      }
+      var options = list.querySelectorAll('.option');
+      for (var j = 0; j < options.length; j++) {
+        options[j].addEventListener('click', (function(el) {
+          return function() {
+            var qid = el.getAttribute('data-qid');
+            var val = parseInt(el.getAttribute('data-val'));
+            state.answers[qid] = val;
+            var siblings = el.parentElement.querySelectorAll('.option');
+            for (var k = 0; k < siblings.length; k++) siblings[k].classList.remove('selected');
+            el.classList.add('selected');
+            updateProgress();
+          };
+        })(options[j]));
+      }
+    }
+
+    function calculateScore() {
+      var scores = { M: 0, S: 0, C: 0, I: 0 };
+      for (var i = 0; i < questions.length; i++) {
+        var q = questions[i];
+        if (state.answers[q.id]) scores[q.dim] += state.answers[q.id];
+      }
+      return scores;
+    }
+
+    function findBestType(scores) {
+      var bestType = null;
+      var bestDiff = Infinity;
+      var types = Object.keys(TYPE_LIBRARY);
+      for (var i = 0; i < types.length; i++) {
+        var type = TYPE_LIBRARY[types[i]];
+        var diff = Math.abs(type.dims.M - scores.M) +
+                   Math.abs(type.dims.S - scores.S) +
+                   Math.abs(type.dims.C - scores.C) +
+                   Math.abs(type.dims.I - scores.I);
+        if (diff < bestDiff) { bestDiff = diff; bestType = type; }
+      }
+      return { type: bestType, diff: bestDiff };
+    }
+
+    function showResult() {
+      var scores = calculateScore();
+      var result = findBestType(scores);
+      var type = result.type;
+      var match = Math.round(Math.max(0, (1 - result.diff / 12) * 100));
+
+      document.getElementById('resultTypeName').textContent = type.cn;
+      document.getElementById('resultTypeSub').textContent = type.intro;
+      document.getElementById('resultDesc').textContent = type.desc;
+      document.getElementById('matchBadge').textContent = '匹配度 ' + match + '%';
+
+      var dimNames = { M: '游戏动机', S: '社交风格', C: '竞技心态', I: '投入方式' };
+      var dimList = document.getElementById('dimList');
+      dimList.innerHTML = '';
+      for (var k in scores) {
+        var item = document.createElement('div');
+        item.className = 'dim-item';
+        item.innerHTML = '<span class="label">' + (dimNames[k] || k) + '</span><span class="value">' + scores[k] + '分</span>';
+        dimList.appendChild(item);
+      }
+
+      var posterBox = document.getElementById('posterBox');
+      var img = document.getElementById('posterImage');
+      var caption = document.getElementById('posterCaption');
+      var imgFile = 'image/' + type.code + '.png';
+      img.onerror = function() { posterBox.classList.add('no-image'); img.style.display = 'none'; caption.textContent = type.intro; };
+      img.onload = function() { posterBox.classList.remove('no-image'); img.style.display = ''; caption.textContent = ''; };
+      img.src = imgFile;
+      caption.textContent = type.intro;
+
+      showScreen('result');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', function() {
+      state.answers = {};
+      renderQuestions();
+      updateProgress();
+      showScreen('test');
+    });
+
+    document.getElementById('backIntroBtn').addEventListener('click', function() { showScreen('intro'); });
+    document.getElementById('toTopBtn').addEventListener('click', function() { showScreen('intro'); });
+    document.getElementById('restartBtn').addEventListener('click', function() {
+      state.answers = {};
+      renderQuestions();
+      updateProgress();
+      showScreen('test');
+    });
+    document.getElementById('submitBtn').addEventListener('click', function() {
+      var answered = 0;
+      for (var k in state.answers) { if (state.answers[k]) answered++; }
+      if (answered >= questions.length) showResult();
+    });
+  </script>
+</body>
+</html>
